@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  firstName    String
+  lastName     String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  groceryItems GroceryItem[]
+  pantryItems  PantryItem[]
+  shelves      PantryShelf[]
+  recipes      Recipe[]
+}
+
+model PantryShelf {
+  id        String       @id @default(cuid())
+  name      String
+  userId    String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  items     PantryItem[]
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PantryItem {
+  id        String       @id @default(cuid())
+  name      String
+  shelfId   String?
+  userId    String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  quantity  String?
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shelf     PantryShelf? @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+}
+
+model Recipe {
+  id                 String       @id @default(cuid())
+  name               String
+  instructions       String
+  totalTime          String?
+  imageUrl           String?
+  mealPlanMultiplier Int?
+  userId             String
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  ingredients        Ingredient[]
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Ingredient {
+  id        String   @id @default(cuid())
+  name      String
+  amount    String?
+  recipeId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+}
+
+model GroceryItem {
+  id        String   @id @default(cuid())
+  name      String
+  source    String?
+  completed Boolean  @default(false)
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  quantity  String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

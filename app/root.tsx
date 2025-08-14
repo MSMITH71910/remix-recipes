@@ -21,6 +21,7 @@ export const links: Route.LinksFunction = () => [
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
+  { rel: "stylesheet", href: "/theme.css" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -42,7 +43,74 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <>
+      <nav className="bg-white shadow-md border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <a href="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">R</span>
+                </div>
+                <span className="text-xl font-bold text-gray-900">Remix Recipes</span>
+              </a>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center space-x-6">
+              <a href="/discover" className="text-gray-600 hover:text-primary font-medium transition-colors">
+                Discover
+              </a>
+              <a href="/app/recipes" className="text-gray-600 hover:text-primary font-medium transition-colors">
+                My Recipes
+              </a>
+              <a href="/app/pantry" className="text-gray-600 hover:text-primary font-medium transition-colors">
+                Pantry
+              </a>
+              <a href="/app/grocery-list" className="text-gray-600 hover:text-primary font-medium transition-colors">
+                Grocery List
+              </a>
+            </div>
+
+            {/* Right side buttons */}
+            <div className="flex items-center space-x-4">
+              <a 
+                href="/app/recipes/new" 
+                className="bg-primary hover:bg-primary-light text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center space-x-2"
+              >
+                <span className="text-lg">+</span>
+                <span>Add Recipe</span>
+              </a>
+              <a 
+                href="/login" 
+                className="text-gray-600 hover:text-primary font-medium transition-colors"
+              >
+                Login
+              </a>
+              <a 
+                href="/settings" 
+                className="text-gray-600 hover:text-primary font-medium transition-colors"
+              >
+                Settings
+              </a>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button className="text-gray-600 hover:text-primary">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <Outlet />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

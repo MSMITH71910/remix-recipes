@@ -1,0 +1,4 @@
+# SPA fallback for client-side routing
+/app/* /app/index.html 200
+/discover /discover/index.html 200
+/* /index.html 200
