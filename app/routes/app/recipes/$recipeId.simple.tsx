@@ -18,9 +18,9 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
-  
-  const user = await db.user.findFirst({ where: { email: "test@example.com" } });
-  if (!user) throw new Error("User not found");
+  // Get the authenticated user
+  const { requireLoggedInUser } = await import("~/utils/auth.server");
+  const user = await requireLoggedInUser(request);
 
   const formData = await request.formData();
   const _action = formData.get("_action");
@@ -122,7 +122,7 @@ export default function RecipeDetail() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">{recipe.name}</h1>
           <div className="flex space-x-4">
-            <Form method="post">
+            <Form method="post" action={`/app/recipes/${recipe.id}/simple`}>
               <button 
                 type="submit"
                 name="_action" 
@@ -133,7 +133,7 @@ export default function RecipeDetail() {
                 <span>Cook Recipe</span>
               </button>
             </Form>
-            <Form method="post">
+            <Form method="post" action={`/app/recipes/${recipe.id}/simple`}>
               <button 
                 type="submit"
                 name="_action" 
