@@ -34,14 +34,21 @@ import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import db from "~/db.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  
-  const user = await db.user.findFirst({ where: { email: "test@example.com" } });
-  if (!user) throw new Error("User not found");
+  try {
+    const user = await db.user.findFirst({ where: { email: "test@example.com" } });
+    if (!user) {
+      console.log("No test user found, returning empty shelves");
+      return { shelves: [] };
+    }
 
-  const url = new URL(request.url);
-  const q = url.searchParams.get("q");
-  const shelves = await getAllShelves(user.id, q);
-  return { shelves };
+    const url = new URL(request.url);
+    const q = url.searchParams.get("q");
+    const shelves = await getAllShelves(user.id, q);
+    return { shelves };
+  } catch (error) {
+    console.error("Error in pantry loader:", error);
+    return { shelves: [] };
+  }
 };
 
 const deleteShelfSchema = z.object({
@@ -66,7 +73,9 @@ const deleteShelfItemSchema = z.object({
 export async function action({ request }: ActionFunctionArgs) {
   
   const user = await db.user.findFirst({ where: { email: "test@example.com" } });
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    return data({ error: "Please log in to perform this action" }, { status: 401 });
+  }
 
   const formData = await request.formData();
   switch (formData.get("_action")) {

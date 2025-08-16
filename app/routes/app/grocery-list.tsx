@@ -6,25 +6,35 @@ import { getAllGroceryItems, toggleGroceryItem, clearCompletedGroceryItems, clea
 import { createShelfItem } from "~/models/pantry-item.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const user = await db.user.findFirst({ where: { email: "test@example.com" } });
-  if (!user) throw new Error("User not found");
-  
-  const groceryItems = await getAllGroceryItems(user.id);
+  try {
+    const user = await db.user.findFirst({ where: { email: "test@example.com" } });
+    if (!user) {
+      console.log("No test user found, returning empty grocery items");
+      return { groceryItems: [] };
+    }
+    
+    const groceryItems = await getAllGroceryItems(user.id);
 
-  return { 
-    groceryItems,
-  };
+    return { 
+      groceryItems,
+    };
+  } catch (error) {
+    console.error("Error in grocery-list loader:", error);
+    return { groceryItems: [] };
+  }
 }
 
 export async function action({ request }: Route.ActionArgs) {
   const user = await db.user.findFirst({ where: { email: "test@example.com" } });
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    return { success: false, error: "Please log in to perform this action" };
+  }
 
   const formData = await request.formData();
   const action = formData.get("_action");
   const itemId = formData.get("itemId") as string;
 
-  fs.writeFileSync('/tmp/action_working.txt', `Action: ${action}, ItemId: ${itemId}\n`, { flag: 'a' });
+
 
   if (action === "toggleItem" && itemId) {
     // Get grocery item BEFORE toggling to check if it needs restoration
@@ -104,7 +114,7 @@ export async function action({ request }: Route.ActionArgs) {
       
       if (shelf) {
         await createShelfItem(user.id, shelf.id, groceryItem.name, groceryItem.quantity);
-        fs.writeFileSync('/tmp/action_working.txt', `RESTORED: ${groceryItem.name} (qty: ${groceryItem.quantity || 'none'}) to ${shelf.name} (target: ${targetShelfName})\n`, { flag: 'a' });
+
       }
     }
     
@@ -113,13 +123,11 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   if (action === "clearCompleted") {
-    fs.writeFileSync('/tmp/action_working.txt', `CLEARING COMPLETED ITEMS\n`, { flag: 'a' });
     await clearCompletedGroceryItems(user.id);
     return { success: true, message: "Completed items cleared" };
   }
 
   if (action === "clearAll") {
-    fs.writeFileSync('/tmp/action_working.txt', `CLEARING ALL ITEMS\n`, { flag: 'a' });
     await clearAllGroceryItems(user.id);
     return { success: true, message: "All items cleared" };
   }
