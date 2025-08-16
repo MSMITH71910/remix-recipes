@@ -5,15 +5,26 @@ import { deleteRecipe } from "~/models/recipe.server";
 import { z } from "zod";
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const user = await db.user.findFirst({ where: { email: "test@example.com" } });
-  if (!user) throw new Error("User not found");
-  
-  const recipes = await db.recipe.findMany({
-    where: { userId: user.id },
-    orderBy: { updatedAt: "desc" },
-  });
+  try {
+    const user = await db.user.findFirst({ where: { email: "test@example.com" } });
+    
+    if (!user) {
+      // If no test user exists, return empty data
+      console.log("No test user found, returning empty recipes");
+      return { recipes: [], user: null };
+    }
+    
+    const recipes = await db.recipe.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: "desc" },
+    });
 
-  return { recipes, user };
+    return { recipes, user };
+  } catch (error) {
+    console.error("Error in recipes loader:", error);
+    // Return empty data if database fails
+    return { recipes: [], user: null };
+  }
 }
 
 const deleteSchema = z.object({
@@ -22,7 +33,12 @@ const deleteSchema = z.object({
 
 export async function action({ request }: Route.ActionArgs) {
   const user = await db.user.findFirst({ where: { email: "test@example.com" } });
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    return { 
+      success: false, 
+      error: "Please log in to perform this action" 
+    };
+  }
 
   const formData = await request.formData();
   const action = formData.get("_action");
@@ -58,6 +74,31 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function MyRecipes() {
   const { recipes, user } = useLoaderData<typeof loader>();
+  
+  // Handle case where no user is found
+  if (!user) {
+    return (
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="text-center py-12">
+          <div className="max-w-md mx-auto">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gray-200 rounded-full flex items-center justify-center">
+              <span className="text-4xl">🔐</span>
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Please Log In</h2>
+            <p className="text-gray-600 mb-6">
+              You need to be logged in to view your recipes.
+            </p>
+            <a 
+              href="/login" 
+              className="bg-primary hover:bg-primary-light text-white px-6 py-3 rounded-md font-medium transition-colors"
+            >
+              Go to Login
+            </a>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-7xl">
