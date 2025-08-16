@@ -1,7 +1,7 @@
 import { data, redirect, useActionData } from "react-router";
 import { z } from "zod";
 import { ErrorMessage, PrimaryButton, PrimaryInput } from "~/components/forms";
-import { getMagicLinkPayload, invalidMagicLink } from "~/magic-links.server";
+import { getMagicLinkPayload } from "~/magic-links.server";
 import { createUser, getUser } from "~/models/user.server";
 import { commitSession, getSession } from "~/sessions";
 import { classNames } from "~/utils/misc";
