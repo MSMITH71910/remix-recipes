@@ -3,16 +3,19 @@
 const { PrismaClient } = require('@prisma/client');
 const db = new PrismaClient();
 
-async function fullSeed() {
+async function resetAndSeed() {
   try {
-    console.log('🌱 Seeding full recipe database...');
+    console.log('🔄 Resetting and seeding database...');
     
-    // Delete existing data
+    // Clear existing data
+    console.log('🗑️ Clearing existing data...');
     await db.pantryItem.deleteMany();
     await db.pantryShelf.deleteMany();
     await db.ingredient.deleteMany();
     await db.recipe.deleteMany();
     await db.user.deleteMany();
+    
+    console.log('✅ Data cleared successfully');
     
     // Create a test user
     const user = await db.user.create({
@@ -125,17 +128,16 @@ async function fullSeed() {
       ]
     });
 
-    console.log('✅ Database seeded successfully!');
+    console.log('🎉 Database reset and seeded successfully!');
     console.log(`✅ Created user: ${user.email}`);
-    console.log(`✅ Created 4 recipes with images`);
+    console.log(`✅ Created 4 recipes with local images`);
     console.log(`✅ Created 2 pantry shelves with items`);
-    console.log('🎉 Full seeding completed successfully!');
   } catch (error) {
-    console.error('❌ Full seeding failed:', error);
+    console.error('❌ Reset and seeding failed:', error);
     process.exit(1);
   } finally {
     await db.$disconnect();
   }
 }
 
-fullSeed();
+resetAndSeed();
