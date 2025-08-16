@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: remix-recipes
+    env: node
+    buildCommand: npm install && npm run build:render
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:./prisma/prod.db
+      - key: SESSION_SECRET
+        generateValue: true
+    healthCheckPath: /health
