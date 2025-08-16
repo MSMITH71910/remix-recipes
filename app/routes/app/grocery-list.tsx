@@ -6,22 +6,16 @@ import { getAllGroceryItems, toggleGroceryItem, clearCompletedGroceryItems, clea
 import { createShelfItem } from "~/models/pantry-item.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
-  try {
-    const user = await db.user.findFirst({ where: { email: "test@example.com" } });
-    if (!user) {
-      console.log("No test user found, returning empty grocery items");
-      return { groceryItems: [] };
-    }
-    
-    const groceryItems = await getAllGroceryItems(user.id);
-
-    return { 
-      groceryItems,
-    };
-  } catch (error) {
-    console.error("Error in grocery-list loader:", error);
+  const user = await db.user.findFirst({ where: { email: "test@example.com" } });
+  if (!user) {
     return { groceryItems: [] };
   }
+  
+  const groceryItems = await getAllGroceryItems(user.id);
+
+  return { 
+    groceryItems,
+  };
 }
 
 export async function action({ request }: Route.ActionArgs) {

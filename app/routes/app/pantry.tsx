@@ -34,21 +34,15 @@ import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import db from "~/db.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  try {
-    const user = await db.user.findFirst({ where: { email: "test@example.com" } });
-    if (!user) {
-      console.log("No test user found, returning empty shelves");
-      return { shelves: [] };
-    }
-
-    const url = new URL(request.url);
-    const q = url.searchParams.get("q");
-    const shelves = await getAllShelves(user.id, q);
-    return { shelves };
-  } catch (error) {
-    console.error("Error in pantry loader:", error);
+  const user = await db.user.findFirst({ where: { email: "test@example.com" } });
+  if (!user) {
     return { shelves: [] };
   }
+
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+  const shelves = await getAllShelves(user.id, q);
+  return { shelves };
 };
 
 const deleteShelfSchema = z.object({

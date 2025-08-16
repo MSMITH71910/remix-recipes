@@ -25,27 +25,13 @@ export async function action({ request }: Route.ActionArgs) {
       return { error: "Instructions are required" };
     }
 
-    // Get all ingredient fields from form data
+    // Simple ingredient collection - just get non-empty ingredient fields
     const ingredients: Array<{ name: string; amount?: string }> = [];
     const formEntries = Array.from(formData.entries());
     
     formEntries.forEach(([key, value]) => {
       if (key.startsWith("ingredient_") && value && typeof value === "string" && value.trim()) {
-        // Parse ingredient format: "1 cup flour" -> { name: "flour", amount: "1 cup" }
-        const ingredientText = value.trim();
-        const parts = ingredientText.split(" ");
-        
-        // Try to detect amount (numbers or fractions at the start)
-        const amountPattern = /^(\d+\/?\d*\.?\d*)\s*(\w+)?\s*/;
-        const match = ingredientText.match(amountPattern);
-        
-        if (match && match[1]) {
-          const amount = (match[1] + " " + (match[2] || "")).trim();
-          const name = ingredientText.replace(amountPattern, "").trim();
-          ingredients.push({ name: name || ingredientText, amount });
-        } else {
-          ingredients.push({ name: ingredientText });
-        }
+        ingredients.push({ name: value.trim() });
       }
     });
 
@@ -54,6 +40,7 @@ export async function action({ request }: Route.ActionArgs) {
       instructions,
       totalTime: totalTime as string || null,
       imageUrl: imageUrl as string || '/recipe-placeholder.svg',
+      mealPlanMultiplier: null,
       userId: user.id,
     }, ingredients);
 

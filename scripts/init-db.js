@@ -22,19 +22,19 @@ try {
   console.log('🗃️ Running database migrations...');
   execSync('npx prisma migrate deploy', { stdio: 'inherit' });
 
-  // Seed database (force it to run)
+  // Seed database with simple seed script
   console.log('🌱 Seeding database...');
   try {
-    execSync('npx prisma db seed', { stdio: 'inherit' });
+    execSync('node scripts/simple-seed.js', { stdio: 'inherit' });
     console.log('✅ Database seeding completed successfully!');
   } catch (seedError) {
-    console.error('❌ Database seeding failed:', seedError.message);
-    console.log('🔄 Attempting to seed again...');
+    console.error('❌ Simple seeding failed:', seedError.message);
+    console.log('🔄 Trying original seed...');
     try {
-      execSync('tsx prisma/seed.ts', { stdio: 'inherit' });
-      console.log('✅ Manual seeding completed successfully!');
-    } catch (manualSeedError) {
-      console.error('❌ Manual seeding also failed:', manualSeedError.message);
+      execSync('npx prisma db seed', { stdio: 'inherit' });
+      console.log('✅ Fallback seeding completed successfully!');
+    } catch (fallbackError) {
+      console.warn('⚠️ All seeding failed - app will have empty data');
     }
   }
 
