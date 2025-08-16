@@ -1,4 +1,4 @@
-import { data, useActionData } from "react-router";
+import { data, useActionData, redirect } from "react-router";
 import { z } from "zod";
 import { ErrorMessage, PrimaryButton, PrimaryInput } from "~/components/forms";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
@@ -18,7 +18,6 @@ const loginSchema = z.object({
 
 export async function action({ request }: ActionFunctionArgs) {
   // SIMPLE DEV LOGIN - No magic links needed
-  const { redirect } = await import("react-router");
   const { commitSession, getSession } = await import("~/sessions");
   const { getUser, createUser } = await import("~/models/user.server");
   
@@ -43,14 +42,12 @@ export async function action({ request }: ActionFunctionArgs) {
     // Set session and redirect to app
     session.set("userId", user.id);
     
-    throw redirect("/app", {
+    return redirect("/app", {
       headers: {
         "Set-Cookie": await commitSession(session),
       },
     });
   } catch (error) {
-    if (error instanceof Response) throw error; // Re-throw redirects
-    
     console.error("Login error:", error);
     return data({ errors: { email: "Login failed" }, email }, { status: 500 });
   }
