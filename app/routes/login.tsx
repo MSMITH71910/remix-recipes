@@ -17,49 +17,43 @@ const loginSchema = z.object({
 });
 
 export async function action({ request }: ActionFunctionArgs) {
-  // Import ALL server-only modules inside the server function only
-  const { requireLoggedOutUser } = await import("~/utils/auth.server");
-  const { generateMagicLink, sendMagicLinkEmail } = await import("~/magic-links.server");
+  // SIMPLE DEV LOGIN - No magic links needed
+  const { redirect } = await import("react-router");
   const { commitSession, getSession } = await import("~/sessions");
-  const { validateForm } = await import("~/utils/validation");
-  const { v4: uuid } = await import("uuid");
+  const { getUser, createUser } = await import("~/models/user.server");
   
-  // Temporarily bypass auth check for development
-  // await requireLoggedOutUser(request);
-
   const cookieHeader = request.headers.get("cookie");
   const session = await getSession(cookieHeader);
   const formData = await request.formData();
+  
+  const email = formData.get("email");
+  
+  if (!email || typeof email !== "string" || !email.includes("@")) {
+    return data({ errors: { email: "Valid email required" }, email }, { status: 400 });
+  }
 
-  return validateForm(
-    formData,
-    loginSchema,
-    async ({ email }) => {
-      // For development: simulate successful login without magic link
-      // In production, you'd send the actual magic link
-      
-      try {
-        const link = await generateMagicLink(email);
-        // Comment out email sending for now to avoid errors
-        // await sendMagicLinkEmail(link, email);
-        
-        return data(
-          { success: true, developmentNote: "Magic link generated but email not sent in development mode." },
-          {
-            headers: {
-              "Set-Cookie": await commitSession(session),
-            },
-          }
-        );
-      } catch (error) {
-        console.error("Login error:", error);
-        return data(
-          { success: true, developmentNote: "Login simulated for development. Check console for details." }
-        );
-      }
-    },
-    (errors) => data({ errors, email: formData.get("email") }, { status: 400 })
-  );
+  try {
+    // Get or create user
+    let user = await getUser(email);
+    
+    if (!user) {
+      user = await createUser(email, "Dev", "User");
+    }
+    
+    // Set session and redirect to app
+    session.set("userId", user.id);
+    
+    throw redirect("/app", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  } catch (error) {
+    if (error instanceof Response) throw error; // Re-throw redirects
+    
+    console.error("Login error:", error);
+    return data({ errors: { email: "Login failed" }, email }, { status: 500 });
+  }
 }
 
 export default function Login() {
