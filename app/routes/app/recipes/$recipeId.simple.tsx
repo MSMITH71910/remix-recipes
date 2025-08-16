@@ -18,12 +18,16 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
+  console.log("Action called! RecipeID:", params.recipeId);
+  
   // Get the authenticated user
   const { requireLoggedInUser } = await import("~/utils/auth.server");
   const user = await requireLoggedInUser(request);
 
   const formData = await request.formData();
   const _action = formData.get("_action");
+  
+  console.log("Action type:", _action, "User ID:", user.id);
 
   if (_action === "addToGroceryList") {
     // Get recipe with ingredients
@@ -122,7 +126,7 @@ export default function RecipeDetail() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">{recipe.name}</h1>
           <div className="flex space-x-4">
-            <Form method="post" action={`/app/recipes/${recipe.id}/simple`}>
+            <Form method="post">
               <button 
                 type="submit"
                 name="_action" 
@@ -133,7 +137,7 @@ export default function RecipeDetail() {
                 <span>Cook Recipe</span>
               </button>
             </Form>
-            <Form method="post" action={`/app/recipes/${recipe.id}/simple`}>
+            <Form method="post">
               <button 
                 type="submit"
                 name="_action" 
