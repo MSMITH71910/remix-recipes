@@ -1,4 +1,4 @@
-import { redirect } from "react-router";
+import { redirect, useActionData } from "react-router";
 import { useState } from "react";
 import type { Route } from "./+types/new";
 import { createRecipe } from "~/models/recipe.server";
@@ -6,35 +6,66 @@ import { PrimaryButton, PrimaryInput, ErrorMessage } from "~/components/forms";
 import db from "~/db.server";
 
 export async function action({ request }: Route.ActionArgs) {
+  try {
+    const user = await db.user.findFirst({ where: { email: "test@example.com" } });
+    if (!user) {
+      return { error: "Please log in to create a recipe" };
+    }
     
-  const user = await db.user.findFirst({ where: { email: "test@example.com" } });
-  if (!user) throw new Error("User not found");
-  
-  const formData = await request.formData();
-  const name = formData.get("name");
-  const instructions = formData.get("instructions");
-  const totalTime = formData.get("totalTime");
-  const imageUrl = formData.get("imageUrl");
+    const formData = await request.formData();
+    const name = formData.get("name");
+    const instructions = formData.get("instructions");
+    const totalTime = formData.get("totalTime");
+    const imageUrl = formData.get("imageUrl");
 
-  if (!name || typeof name !== "string") {
-    return { error: "Recipe name is required" };
+    if (!name || typeof name !== "string") {
+      return { error: "Recipe name is required" };
+    }
+    if (!instructions || typeof instructions !== "string") {
+      return { error: "Instructions are required" };
+    }
+
+    // Get all ingredient fields from form data
+    const ingredients: Array<{ name: string; amount?: string }> = [];
+    const formEntries = Array.from(formData.entries());
+    
+    formEntries.forEach(([key, value]) => {
+      if (key.startsWith("ingredient_") && value && typeof value === "string" && value.trim()) {
+        // Parse ingredient format: "1 cup flour" -> { name: "flour", amount: "1 cup" }
+        const ingredientText = value.trim();
+        const parts = ingredientText.split(" ");
+        
+        // Try to detect amount (numbers or fractions at the start)
+        const amountPattern = /^(\d+\/?\d*\.?\d*)\s*(\w+)?\s*/;
+        const match = ingredientText.match(amountPattern);
+        
+        if (match && match[1]) {
+          const amount = (match[1] + " " + (match[2] || "")).trim();
+          const name = ingredientText.replace(amountPattern, "").trim();
+          ingredients.push({ name: name || ingredientText, amount });
+        } else {
+          ingredients.push({ name: ingredientText });
+        }
+      }
+    });
+
+    const recipe = await createRecipe({
+      name,
+      instructions,
+      totalTime: totalTime as string || null,
+      imageUrl: imageUrl as string || '/recipe-placeholder.svg',
+      userId: user.id,
+    }, ingredients);
+
+    return redirect(`/app/recipes`);
+  } catch (error) {
+    console.error("Error creating recipe:", error);
+    return { error: "Failed to create recipe. Please try again." };
   }
-  if (!instructions || typeof instructions !== "string") {
-    return { error: "Instructions are required" };
-  }
-
-  const recipe = await createRecipe({
-    name,
-    instructions,
-    totalTime: totalTime as string,
-    imageUrl: imageUrl as string || '/recipe-placeholder.svg',
-    userId: user.id,
-  });
-
-  return redirect(`/app/recipes`);
 }
 
 export default function AddRecipe() {
+  const actionData = useActionData<typeof action>();
   const [ingredients, setIngredients] = useState([""]);
 
   const addIngredient = () => {
@@ -65,6 +96,12 @@ export default function AddRecipe() {
         </div>
 
         <form method="post" className="space-y-6">
+          {actionData?.error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+              {actionData.error}
+            </div>
+          )}
+          
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
               Recipe Name *
@@ -111,6 +148,7 @@ export default function AddRecipe() {
                 <div key={index} className="flex items-center space-x-2">
                   <input
                     type="text"
+                    name={`ingredient_${index}`}
                     value={ingredient}
                     onChange={(e) => updateIngredient(index, e.target.value)}
                     placeholder="e.g., 1 cup flour"
