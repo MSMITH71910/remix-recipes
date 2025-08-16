@@ -25,3 +25,22 @@ export function deleteShelfItem(id: string) {
 export function getShelfItem(id: string) {
   return db.pantryItem.findUnique({ where: { id } });
 }
+
+export function updateShelfItemQuantity(id: string, newQuantity: string) {
+  return db.pantryItem.update({
+    where: { id },
+    data: { quantity: newQuantity }
+  });
+}
+
+export function getPantryItemByName(userId: string, itemName: string) {
+  return db.pantryItem.findFirst({
+    where: {
+      userId,
+      name: {
+        contains: itemName,
+        mode: 'insensitive'
+      }
+    }
+  });
+}

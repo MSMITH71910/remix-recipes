@@ -1,4 +1,4 @@
-import { useLoaderData, redirect, Form } from "react-router";
+import { useLoaderData, redirect, Form, useSearchParams } from "react-router";
 import type { Route } from "./+types/$recipeId.simple";
 import db from "~/db.server";
 
@@ -62,8 +62,29 @@ export async function action({ request, params }: Route.ActionArgs) {
       }
     }
 
-
     return redirect(`/app/grocery-list`);
+  }
+
+  if (_action === "cookRecipe") {
+    // Get recipe with ingredients
+    const recipe = await db.recipe.findUnique({
+      where: { id: params.recipeId },
+      include: {
+        ingredients: {
+          select: { name: true, amount: true }
+        }
+      }
+    });
+
+    if (!recipe) {
+      throw new Error("Recipe not found");
+    }
+
+    // Use ingredients from pantry
+    const { useRecipeIngredients } = await import("~/utils/use-ingredients.server");
+    const results = await useRecipeIngredients(user.id, recipe.ingredients);
+    
+    return redirect(`/app/recipes/${params.recipeId}/simple?cooked=true&used=${results.length}`);
   }
 
   return null;
@@ -71,13 +92,47 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 export default function RecipeDetail() {
   const { recipe } = useLoaderData<typeof loader>();
+  const [searchParams] = useSearchParams();
+  
+  // Check for success message in URL params
+  const cooked = searchParams.get('cooked');
+  const usedCount = searchParams.get('used');
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="bg-white rounded-lg shadow-md p-6">
+        {/* Success Message */}
+        {cooked === 'true' && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+            <div className="flex items-center">
+              <span className="text-xl mr-2">🍽️</span>
+              <div>
+                <p className="font-semibold">Recipe Cooked Successfully!</p>
+                <p className="text-sm">
+                  {usedCount && parseInt(usedCount) > 0 
+                    ? `${usedCount} ingredients were automatically deducted from your pantry.`
+                    : 'No matching ingredients found in your pantry to deduct.'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">{recipe.name}</h1>
           <div className="flex space-x-4">
+            <Form method="post">
+              <button 
+                type="submit"
+                name="_action" 
+                value="cookRecipe"
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center space-x-2"
+              >
+                <span>🍳</span>
+                <span>Cook Recipe</span>
+              </button>
+            </Form>
             <Form method="post">
               <button 
                 type="submit"
