@@ -7,9 +7,11 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=file:./data/database.db
+      - DATABASE_URL=postgresql://recipes_user:recipes_password@db:5432/remix_recipes?schema=public
     volumes:
       - ./data:/app/data
+    depends_on:
+      - db
     restart: unless-stopped
 
   db:
