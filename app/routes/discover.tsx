@@ -3,13 +3,19 @@ import { DiscoverGrid, DiscoverListItem } from "~/components/discover";
 import db from "~/db.server";
 
 export async function loader() {
-  const recipes = await db.recipe.findMany({
-    take: 25,
-    orderBy: { updatedAt: "desc" },
-    include: { user: { select: { firstName: true, lastName: true } } },
-  });
+  try {
+    const recipes = await db.recipe.findMany({
+      take: 25,
+      orderBy: { updatedAt: "desc" },
+      include: { user: { select: { firstName: true, lastName: true } } },
+    });
 
-  return { recipes };
+    return { recipes };
+  } catch (error) {
+    console.error("Database error in discover route:", error);
+    // Return empty recipes if database fails
+    return { recipes: [] };
+  }
 }
 
 export default function Discover() {
