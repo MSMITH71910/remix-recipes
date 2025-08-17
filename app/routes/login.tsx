@@ -42,7 +42,7 @@ export async function action({ request }: ActionFunctionArgs) {
     // Set session and redirect to app
     session.set("userId", user.id);
     
-    return redirect("/app", {
+    return redirect("/app/recipes", {
       headers: {
         "Set-Cookie": await commitSession(session),
       },
