@@ -27,7 +27,7 @@ export function DiscoverListItem({ recipe }: DiscoverListItemProps) {
       key={recipe.id}
       className="shadow-md rounded-md hover:text-primary group"
     >
-      <Link to={recipe.id} className="flex flex-col h-full">
+      <Link to={`/discover/${recipe.id}`} className="flex flex-col h-full">
         <div className="h-48 overflow-hidden bg-gray-200 flex items-center justify-center">
           {recipe.imageUrl ? (
             <img
