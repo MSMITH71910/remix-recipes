@@ -11,41 +11,49 @@ import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 const magicLinkMaxAge = 1000 * 60 * 10; // 10 minutes
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const magicLinkPayload = await getMagicLinkPayload(request);
+  try {
+    const magicLinkPayload = await getMagicLinkPayload(request);
 
-  // 1. Validate expiration time
-  const createdAt = new Date(magicLinkPayload.createdAt);
-  const expiresAt = createdAt.getTime() + magicLinkMaxAge;
+    // 1. Validate expiration time
+    const createdAt = new Date(magicLinkPayload.createdAt);
+    const expiresAt = createdAt.getTime() + magicLinkMaxAge;
 
-  if (Date.now() > expiresAt) {
-    throw new Error("the magic link has expired");
-  }
+    if (Date.now() > expiresAt) {
+      console.error("Magic link expired");
+      return redirect("/login?error=expired");
+    }
 
-  // 2. Validate nonce
-  const cookieHeader = request.headers.get("cookie");
-  const session = await getSession(cookieHeader);
+    // 2. Validate nonce
+    const cookieHeader = request.headers.get("cookie");
+    const session = await getSession(cookieHeader);
 
-  if (session.get("nonce") !== magicLinkPayload.nonce) {
-    throw new Error("invalid nonce");
-  }
+    if (session.get("nonce") !== magicLinkPayload.nonce) {
+      console.error("Invalid nonce");
+      return redirect("/login?error=invalid");
+    }
 
-  const user = await getUser(magicLinkPayload.email);
+    const user = await getUser(magicLinkPayload.email);
 
-  if (user) {
-    session.set("userId", user.id);
-    session.unset("nonce");
-    return redirect("/app/recipes", {
+    if (user) {
+      session.set("userId", user.id);
+      session.unset("nonce");
+      return redirect("/app/recipes", {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      });
+    }
+
+    return data("ok", {
       headers: {
         "Set-Cookie": await commitSession(session),
       },
     });
+  } catch (error) {
+    console.error("Magic link validation error:", error);
+    // If magic link is invalid/expired, redirect back to login
+    return redirect("/login?error=invalid-link");
   }
-
-  return data("ok", {
-    headers: {
-      "Set-Cookie": await commitSession(session),
-    },
-  });
 }
 
 const signUpSchema = z.object({

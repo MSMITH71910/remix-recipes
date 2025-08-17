@@ -1,4 +1,4 @@
-import { data, useActionData, redirect } from "react-router";
+import { data, useActionData, useLoaderData, redirect } from "react-router";
 import { z } from "zod";
 import { ErrorMessage, PrimaryButton, PrimaryInput } from "~/components/forms";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
@@ -9,7 +9,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
   
   // Redirect logged-in users to the app
   await requireLoggedOutUser(request);
-  return null;
+  
+  // Check for error query parameters
+  const url = new URL(request.url);
+  const error = url.searchParams.get("error");
+  
+  let errorMessage = null;
+  if (error === "expired") {
+    errorMessage = "Your magic link has expired. Please request a new one.";
+  } else if (error === "invalid" || error === "invalid-link") {
+    errorMessage = "Invalid magic link. Please request a new one.";
+  }
+  
+  return { error: errorMessage };
 }
 
 const loginSchema = z.object({
@@ -77,6 +89,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Login() {
   const actionData = useActionData<any>();
+  const loaderData = useLoaderData<typeof loader>();
   return (
     <div className="text-center mt-36">
       {actionData?.success ? (
@@ -109,6 +122,15 @@ export default function Login() {
       ) : (
         <div>
           <h1 className="text-3xl mb-8">Remix Recipes</h1>
+          
+          {/* Show error message if magic link failed */}
+          {loaderData?.error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 p-4 rounded-md mb-6 mx-auto max-w-md">
+              <p className="font-semibold">Error:</p>
+              <p>{loaderData.error}</p>
+            </div>
+          )}
+          
           <form method="post" className="mx-auto md:w-1/3">
             <div className="text-left pb-4">
               <PrimaryInput
