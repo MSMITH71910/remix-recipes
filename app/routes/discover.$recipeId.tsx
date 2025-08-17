@@ -5,7 +5,6 @@ import {
   DiscoverRecipeHeader,
 } from "~/components/discover";
 import db from "~/db.server";
-import { getCurrentUser } from "~/utils/auth.server";
 import { hash } from "~/utils/cryptography.server";
 import type { Route } from "./+types/discover.$recipeId";
 
@@ -39,10 +38,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     );
   }
 
-  const user = await getCurrentUser(request);
-  const hashedUserId = hash(user?.id ?? "anonymous");
+  // Simple etag based on recipe data only (no authentication needed for public route)
   const hashedRecipe = hash(JSON.stringify(recipe));
-  const etag = `${hashedUserId}.${hashedRecipe}`;
+  const etag = `public.${hashedRecipe}`;
 
   return data({ recipe }, { headers: { etag } });
 }
