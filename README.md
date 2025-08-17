@@ -149,13 +149,13 @@ The app uses Tailwind CSS for styling. Key customizations:
 
 ## 🌐 Deployment
 
-### Netlify (Recommended)
-This app is optimized for Netlify deployment. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+### **Render (Recommended)**  
+This app is optimized for deployment on **Render**. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
-### Other Platforms
-- **Vercel**: Compatible with minor configuration changes
-- **Railway**: Works with the existing setup  
-- **Render**: Supports Node.js applications
+### **Other Platforms**  
+- **Netlify**: Compatible with minor configuration changes  
+- **Vercel**: Works with adjustments  
+- **Railway**: Supports Node.js applications  
 
 ## 📄 License
 
