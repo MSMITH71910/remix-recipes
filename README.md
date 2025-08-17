@@ -165,6 +165,18 @@ MIT License - feel free to use this project for your own recipe management needs
 
 This is a personal project, but suggestions and improvements are welcome!
 
+## 👨‍💻 Author
+
+**Michael R. Smith** - *SmithDev Labs*
+- GitHub: [@MSMITH71910](https://github.com/MSMITH71910)
+- Portfolio: [SmithDev Labs](https://github.com/MSMITH71910)
+
+## 🙏 Acknowledgments
+
+- Built with modern web technologies and best practices
+- Inspired by the need for a simple, effective recipe management solution
+- Designed with mobile-first responsive approach
+
 ---
 
-**Made with ❤️ using Remix and TypeScript**
+**Made with ❤️ by SmithDev Labs using Remix and TypeScript**

@@ -1,5 +1,7 @@
 # Changelog
 
+All notable changes to Remix Recipes by SmithDev Labs.
+
 ## [2.0.0] - 2025-01-16
 
 ### 🚀 Major Changes

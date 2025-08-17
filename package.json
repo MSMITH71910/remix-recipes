@@ -1,5 +1,15 @@
 {
   "name": "remix-recipes",
+  "version": "2.0.0",
+  "description": "A full-stack recipe management application built with Remix, TypeScript, and PostgreSQL",
+  "author": "Michael R. Smith <m.smith71910@gmail.com> (SmithDev Labs)",
+  "license": "MIT",
+  "keywords": ["remix", "recipes", "typescript", "postgresql", "cooking", "meal-planning"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MSMITH71910/remix-recipes.git"
+  },
+  "homepage": "https://github.com/MSMITH71910/remix-recipes#readme",
   "private": true,
   "type": "module",
   "scripts": {

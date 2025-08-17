@@ -1,4 +1,8 @@
-# 📧 Email Setup for Magic Links
+# 📧 Email Configuration Guide
+
+## Magic Link Authentication Setup
+
+This guide covers setting up real email delivery for magic link authentication in your Remix Recipes application.
 
 ## Quick Setup with Resend (Recommended)
 
