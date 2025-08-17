@@ -7,6 +7,10 @@ export async function action({ request }: Route.ActionArgs) {
   const action = formData.get("action");
   
   if (action === "updateProfile") {
+    // Get current user
+    const { requireLoggedInUser } = await import("~/utils/auth.server");
+    const user = await requireLoggedInUser(request);
+    
     // Handle profile update
     const email = formData.get("email");
     const firstName = formData.get("firstName");
@@ -17,9 +21,13 @@ export async function action({ request }: Route.ActionArgs) {
       return data({ error: "All fields are required" }, { status: 400 });
     }
     
-    // For now, store in session/cookie since we don't have authentication set up
-    // In a real app with proper auth, you'd update the database here
-
+    // Update user in database
+    const { updateUser } = await import("~/models/user.server");
+    await updateUser(user.id, {
+      email: email.toString(),
+      firstName: firstName.toString(),
+      lastName: lastName.toString(),
+    });
     
     // Show success message
     return data({ success: "Profile updated successfully!" });
@@ -36,14 +44,17 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  const { requireLoggedInUser } = await import("~/utils/auth.server");
+  const user = await requireLoggedInUser(request);
+  
   const cookieHeader = request.headers.get("cookie");
   const theme = await themeCookie.parse(cookieHeader) || "green";
   
-  return { theme };
+  return { theme, user };
 }
 
 export default function Settings() {
-  const { theme } = useLoaderData<typeof loader>();
+  const { theme, user } = useLoaderData<typeof loader>();
   const actionData = useActionData<any>();
   const submit = useSubmit();
   const navigation = useNavigation();
@@ -146,7 +157,7 @@ export default function Settings() {
                 <input 
                   type="email" 
                   name="email"
-                  defaultValue="test@example.com"
+                  defaultValue={user.email}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Enter your email address"
                 />
@@ -161,7 +172,7 @@ export default function Settings() {
                   <input 
                     type="text" 
                     name="firstName"
-                    defaultValue="Test"
+                    defaultValue={user.firstName}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="Enter your first name"
                   />
@@ -173,7 +184,7 @@ export default function Settings() {
                   <input 
                     type="text" 
                     name="lastName"
-                    defaultValue="User"
+                    defaultValue={user.lastName}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="Enter your last name"
                   />

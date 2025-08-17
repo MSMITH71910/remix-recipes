@@ -5,10 +5,17 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const { getCurrentUser } = await import("~/utils/auth.server");
+  const user = await getCurrentUser(request);
+  return { user };
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -43,6 +50,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const { user } = useLoaderData<typeof loader>();
   return (
     <>
       <nav className="bg-white shadow-md border-b">
@@ -76,25 +84,39 @@ export default function App() {
 
             {/* Right side buttons */}
             <div className="flex items-center space-x-4">
-              <a 
-                href="/app/recipes/new" 
-                className="bg-primary hover:bg-primary-light text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center space-x-2"
-              >
-                <span className="text-lg">+</span>
-                <span>Add Recipe</span>
-              </a>
-              <a 
-                href="/login" 
-                className="text-gray-600 hover:text-primary font-medium transition-colors"
-              >
-                Login
-              </a>
-              <a 
-                href="/settings" 
-                className="text-gray-600 hover:text-primary font-medium transition-colors"
-              >
-                Settings
-              </a>
+              {user ? (
+                <>
+                  <a 
+                    href="/app/recipes/new" 
+                    className="bg-primary hover:bg-primary-light text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center space-x-2"
+                  >
+                    <span className="text-lg">+</span>
+                    <span>Add Recipe</span>
+                  </a>
+                  <span className="text-gray-600 font-medium">
+                    Welcome, {user.firstName}!
+                  </span>
+                  <a 
+                    href="/settings" 
+                    className="text-gray-600 hover:text-primary font-medium transition-colors"
+                  >
+                    Settings
+                  </a>
+                  <a 
+                    href="/logout" 
+                    className="text-gray-600 hover:text-red-600 font-medium transition-colors"
+                  >
+                    Logout
+                  </a>
+                </>
+              ) : (
+                <a 
+                  href="/login" 
+                  className="bg-primary hover:bg-primary-light text-white px-4 py-2 rounded-md font-medium transition-colors"
+                >
+                  Login
+                </a>
+              )}
             </div>
 
             {/* Mobile menu button */}

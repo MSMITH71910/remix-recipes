@@ -19,6 +19,13 @@ export function createUser(email: string, firstName: string, lastName: string) {
   });
 }
 
+export function updateUser(id: string, data: { email: string; firstName: string; lastName: string }) {
+  return db.user.update({
+    where: { id },
+    data,
+  });
+}
+
 export function deleteUser(email: string) {
   return handleDelete(async () => {
     const user = await getUser(email);
