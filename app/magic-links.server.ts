@@ -54,7 +54,7 @@ export async function sendMagicLinkEmail(magicLink: string, email: string) {
   `;
   
   await sendEmail({
-    from: process.env.MAILGUN_FROM_EMAIL || "noreply@example.com",
+    from: process.env.RESEND_FROM_EMAIL || process.env.MAILGUN_FROM_EMAIL || "noreply@remix-recipes.com",
     to: email,
     subject: "🔐 Sign in to Remix Recipes",
     html: emailHtml,

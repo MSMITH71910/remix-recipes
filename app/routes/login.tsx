@@ -45,11 +45,12 @@ export async function action({ request }: ActionFunctionArgs) {
       console.log("Email sending failed, showing link directly:", emailError);
     }
     
-    // Check if email is configured
+    // Check if email is configured (Resend or Mailgun)
     const isEmailConfigured = 
-      typeof process.env.MAILGUN_API_KEY === "string" && 
-      typeof process.env.MAILGUN_DOMAIN === "string" &&
-      !process.env.MAILGUN_API_KEY.includes("dummy");
+      (typeof process.env.RESEND_API_KEY === "string" && !process.env.RESEND_API_KEY.includes("dummy")) ||
+      (typeof process.env.MAILGUN_API_KEY === "string" && 
+       typeof process.env.MAILGUN_DOMAIN === "string" &&
+       !process.env.MAILGUN_API_KEY.includes("dummy"));
     
     return data(
       { 

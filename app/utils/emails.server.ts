@@ -1,19 +1,12 @@
-import formData from "form-data";
-import Mailgun from "mailgun.js";
+import { Resend } from 'resend';
 
-// Check if email service is configured
-const isEmailConfigured = 
-  typeof process.env.MAILGUN_API_KEY === "string" && 
-  typeof process.env.MAILGUN_DOMAIN === "string";
+// Check if Resend is configured
+const isResendConfigured = typeof process.env.RESEND_API_KEY === "string" && process.env.RESEND_API_KEY !== "dummy-key";
 
-// Only initialize mailgun if configured
-let client: any = null;
-if (isEmailConfigured) {
-  const mailgun = new Mailgun(formData);
-  client = mailgun.client({
-    username: "api",
-    key: process.env.MAILGUN_API_KEY,
-  });
+// Initialize Resend client
+let resend: Resend | null = null;
+if (isResendConfigured) {
+  resend = new Resend(process.env.RESEND_API_KEY);
 }
 
 type Message = {
@@ -23,11 +16,24 @@ type Message = {
   html: string;
 };
 
-export function sendEmail(message: Message) {
-  if (!isEmailConfigured) {
-    console.log("Email not configured - would send:", message.subject, "to", message.to);
+export async function sendEmail(message: Message) {
+  if (!isResendConfigured || !resend) {
+    console.log("Resend not configured - would send:", message.subject, "to", message.to);
     return Promise.resolve({ id: "mock-email-id", message: "Email service not configured" });
   }
   
-  return client.messages.create(process.env.MAILGUN_DOMAIN, message);
+  try {
+    const result = await resend.emails.send({
+      from: message.from,
+      to: message.to,
+      subject: message.subject,
+      html: message.html,
+    });
+    
+    console.log("Email sent successfully:", result.id);
+    return result;
+  } catch (error) {
+    console.error("Failed to send email:", error);
+    throw error;
+  }
 }
