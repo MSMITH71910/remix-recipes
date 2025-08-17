@@ -88,7 +88,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     const { useRecipeIngredients } = await import("~/utils/use-ingredients.server");
     const results = await useRecipeIngredients(user.id, recipe.ingredients);
     
-    return redirect(`/app/recipes/${params.recipeId}/simple?cooked=true&used=${results.length}`);
+    return redirect(`/app/recipes/${params.recipeId}?cooked=true&used=${results.length}`);
   }
 
   return null;
