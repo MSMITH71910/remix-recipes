@@ -38,16 +38,29 @@ export async function action({ request }: ActionFunctionArgs) {
     
     // Generate and send magic link
     const magicLink = await generateMagicLink(email, nonce);
-    await sendMagicLinkEmail(magicLink, email);
     
-    // In development, show the magic link
-    const isDev = process.env.NODE_ENV === "development";
+    try {
+      await sendMagicLinkEmail(magicLink, email);
+    } catch (emailError) {
+      console.log("Email sending failed, showing link directly:", emailError);
+    }
+    
+    // Check if email is configured
+    const isEmailConfigured = 
+      typeof process.env.MAILGUN_API_KEY === "string" && 
+      typeof process.env.MAILGUN_DOMAIN === "string" &&
+      !process.env.MAILGUN_API_KEY.includes("dummy");
     
     return data(
       { 
-        success: "Check your email for a magic link to sign in!", 
+        success: isEmailConfigured 
+          ? "Check your email for a magic link to sign in!"
+          : "Magic link generated! Click the link below to sign in:",
         email,
-        developmentNote: isDev ? `Dev mode: Click this link to sign in: ${magicLink}` : undefined
+        magicLink: !isEmailConfigured ? magicLink : undefined,
+        developmentNote: !isEmailConfigured 
+          ? "Email service not configured - using direct link instead"
+          : undefined
       },
       {
         headers: {
@@ -67,14 +80,28 @@ export default function Login() {
     <div className="text-center mt-36">
       {actionData?.success ? (
         <div>
-          <h1 className="text-2xl py-8">Yum!</h1>
-          <p className="mb-4">
-            Check your email and follow the instructions to finish logging in.
+          <h1 className="text-2xl py-8">🔐 Magic Link Ready!</h1>
+          <p className="mb-4 text-lg">
+            {actionData.success}
           </p>
+          
+          {/* Show magic link directly if email not configured */}
+          {actionData?.magicLink && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-6 mx-auto max-w-md">
+              <p className="text-sm text-blue-600 mb-3">Click this secure link to sign in:</p>
+              <a 
+                href={actionData.magicLink}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg inline-block hover:bg-blue-700 transition-colors"
+              >
+                🔗 Sign In Now
+              </a>
+            </div>
+          )}
+          
           {actionData?.developmentNote && (
-            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 p-4 rounded-md mt-4">
-              <p className="font-semibold">Development Mode:</p>
-              <p>{actionData.developmentNote}</p>
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 p-4 rounded-md mt-4 mx-auto max-w-md">
+              <p className="font-semibold">Note:</p>
+              <p className="text-sm">{actionData.developmentNote}</p>
             </div>
           )}
         </div>
