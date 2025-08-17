@@ -7,8 +7,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Import server-only modules inside server functions only
   const { requireLoggedOutUser } = await import("~/utils/auth.server");
   
-  // Temporarily bypass auth check for development
-  // await requireLoggedOutUser(request);
+  // Redirect logged-in users to the app
+  await requireLoggedOutUser(request);
   return null;
 }
 
@@ -17,9 +17,9 @@ const loginSchema = z.object({
 });
 
 export async function action({ request }: ActionFunctionArgs) {
-  // SIMPLE DEV LOGIN - No magic links needed
   const { commitSession, getSession } = await import("~/sessions");
-  const { getUser, createUser } = await import("~/models/user.server");
+  const { generateMagicLink, sendMagicLinkEmail } = await import("~/magic-links.server");
+  const { v4: uuid } = await import("uuid");
   
   const cookieHeader = request.headers.get("cookie");
   const session = await getSession(cookieHeader);
@@ -32,24 +32,32 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
-    // Get or create user
-    let user = await getUser(email);
+    // Generate nonce for security
+    const nonce = uuid();
+    session.set("nonce", nonce);
     
-    if (!user) {
-      user = await createUser(email, "Dev", "User");
-    }
+    // Generate and send magic link
+    const magicLink = await generateMagicLink(email, nonce);
+    await sendMagicLinkEmail(magicLink, email);
     
-    // Set session and redirect to app
-    session.set("userId", user.id);
+    // In development, show the magic link
+    const isDev = process.env.NODE_ENV === "development";
     
-    return redirect("/app/recipes", {
-      headers: {
-        "Set-Cookie": await commitSession(session),
+    return data(
+      { 
+        success: "Check your email for a magic link to sign in!", 
+        email,
+        developmentNote: isDev ? `Dev mode: Click this link to sign in: ${magicLink}` : undefined
       },
-    });
+      {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      }
+    );
   } catch (error) {
-    console.error("Login error:", error);
-    return data({ errors: { email: "Login failed" }, email }, { status: 500 });
+    console.error("Magic link error:", error);
+    return data({ errors: { email: "Failed to send magic link. Please try again." }, email }, { status: 400 });
   }
 }
 

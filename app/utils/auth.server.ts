@@ -19,7 +19,7 @@ export async function requireLoggedOutUser(request: Request) {
   const user = await getCurrentUser(request);
 
   if (user !== null) {
-    throw redirect("/app");
+    throw redirect("/app/recipes");
   }
 }
 

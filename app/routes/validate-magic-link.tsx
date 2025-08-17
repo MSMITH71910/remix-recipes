@@ -34,7 +34,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (user) {
     session.set("userId", user.id);
     session.unset("nonce");
-    return redirect("/app", {
+    return redirect("/app/recipes", {
       headers: {
         "Set-Cookie": await commitSession(session),
       },
@@ -72,7 +72,7 @@ export async function action({ request }: ActionFunctionArgs) {
       session.set("userId", user.id);
       session.unset("nonce");
 
-      return redirect("/app", {
+      return redirect("/app/recipes", {
         headers: {
           "Set-Cookie": await commitSession(session),
         },
