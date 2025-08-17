@@ -39,9 +39,7 @@ A full-stack recipe management application built with Remix, TypeScript, and SQL
 
 ## 🚀 Quick Deploy
 
-<!-- Deployment trigger comment -->
-
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/MSMITH71910/remix-recipes)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/MSMITH71910/remix-recipes)
 
 ## 🛠️ Local Development
 
